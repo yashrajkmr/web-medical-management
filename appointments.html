@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Appointment Scheduler</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-6">
+  <div class="max-w-2xl mx-auto bg-white p-6 rounded shadow">
+    <h1 class="text-2xl font-bold mb-4">Book an Appointment</h1>
+    <a href="dashboard.html" class="bg-gray-600 text-white px-3 py-1 rounded hover:bg-gray-700 inline-block mb-4">
+  ← Back to Dashboard
+   </a>
+
+  <button onclick="logout()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded float-right mb-4">
+  Logout
+  </button>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+      <input id="patientName" type="text" placeholder="Patient Name" class="p-2 border rounded w-full">
+      <input id="doctorName" type="text" placeholder="Doctor Name" class="p-2 border rounded w-full">
+      <input id="date" type="date" class="p-2 border rounded w-full">
+      <input id="time" type="time" class="p-2 border rounded w-full">
+    </div>
+
+    <button onclick="bookAppointment()" class="bg-blue-600 text-white px-4 py-2 rounded mb-6">Book</button>
+
+    <h2 class="text-xl font-semibold mb-2">Scheduled Appointments</h2>
+    <ul id="appointmentList" class="space-y-2"></ul>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+    import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBY_NsHhsiQ3ne-wviXC0NH7Bso7HaZJGU",
+      authDomain: "web-medical-management.firebaseapp.com",
+      projectId: "web-medical-management",
+      storageBucket: "web-medical-management.firebasestorage.app",
+      messagingSenderId: "725556549487",
+      appId: "1:725556549487:web:1c6d4abf6a413dd4a7fa9a"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    window.logout = () => {
+    signOut(auth)
+      .then(() => {
+        alert("Logged out successfully!");
+        window.location.href = "index.html";
+      })
+      .catch((error) => {
+        alert("Logout failed: " + error.message);
+      });
+  };
+
+    const list = document.getElementById("appointmentList");
+
+    async function loadAppointments() {
+      const snapshot = await getDocs(collection(db, "appointments"));
+      list.innerHTML = "";
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const li = document.createElement("li");
+        li.textContent = `${data.patient} with Dr. ${data.doctor} on ${data.date} at ${data.time}`;
+        li.className = "bg-gray-50 p-3 rounded shadow-sm";
+        list.appendChild(li);
+      });
+    }
+
+    window.bookAppointment = async () => {
+      const patient = document.getElementById("patientName").value;
+      const doctor = document.getElementById("doctorName").value;
+      const date = document.getElementById("date").value;
+      const time = document.getElementById("time").value;
+
+      if (!patient || !doctor || !date || !time) {
+        alert("Please fill all fields.");
+        return;
+      }
+
+      await addDoc(collection(db, "appointments"), { patient, doctor, date, time });
+      alert("Appointment booked successfully!");
+      loadAppointments();
+    };
+
+    loadAppointments();
+  </script>
+</body>
+</html>

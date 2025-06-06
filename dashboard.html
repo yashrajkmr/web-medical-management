@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Patient Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 p-8">
+  <h1 class="text-2xl font-bold mb-6">Patient Dashboard</h1>
+
+  <button onclick="logout()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded float-right mb-4">
+  Logout
+</button>
+
+
+  <div class="mb-4">
+    <input id="pname" placeholder="Patient Name" class="p-2 border rounded mr-2">
+    <input id="page" placeholder="Age" type="number" class="p-2 border rounded mr-2">
+    <input id="issue" placeholder="Issue" class="p-2 border rounded mr-2">
+    <button onclick="addPatient()" class="bg-green-600 text-white px-4 py-2 rounded">Add Patient</button>
+  </div>
+
+  <div>
+    <h2 class="text-xl font-semibold mb-2">Registered Patients</h2>
+    <ul id="patientList" class="space-y-2"></ul>
+    <div class="mt-6">
+  <a href="appointments.html" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">
+    Go to Appointment Booking
+  </a>
+</div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+    import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBY_NsHhsiQ3ne-wviXC0NH7Bso7HaZJGU",
+      authDomain: "web-medical-management.firebaseapp.com",
+      projectId: "web-medical-management",
+      storageBucket: "web-medical-management.firebasestorage.app",
+      messagingSenderId: "725556549487",
+      appId: "1:725556549487:web:1c6d4abf6a413dd4a7fa9a"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    window.logout = () => {
+  signOut(auth)
+    .then(() => {
+      alert("Logged out successfully!");
+      window.location.href = "index.html";
+    })
+    .catch((error) => {
+      alert("Logout failed: " + error.message);
+    });
+};
+
+
+    const list = document.getElementById("patientList");
+
+    async function loadPatients() {
+      const snapshot = await getDocs(collection(db, "patients"));
+      list.innerHTML = "";
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const li = document.createElement("li");
+        li.textContent = `${data.name} - Age: ${data.age}, Issue: ${data.issue}`;
+        li.className = "bg-white shadow p-2 rounded";
+        list.appendChild(li);
+      });
+    }
+
+    window.addPatient = async () => {
+      const name = document.getElementById("pname").value;
+      const age = document.getElementById("page").value;
+      const issue = document.getElementById("issue").value;
+
+      if (!name || !age || !issue) {
+        alert("Please fill out all fields.");
+        return;
+      }
+
+      await addDoc(collection(db, "patients"), { name, age, issue });
+      alert("Patient added successfully!");
+      loadPatients();
+    };
+
+    loadPatients();
+  </script>
+</body>
+</html>
